@@ -58,7 +58,7 @@ shadowJar {
 
 gradlePlugin {
     plugins {
-        modPublisherPlugin {
+        modFusionerPlugin {
             id = 'com.hypherionmc.modutils.modfusioner'
             description = project.description
             displayName = 'ModFusioner'

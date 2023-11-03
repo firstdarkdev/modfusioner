@@ -107,8 +107,8 @@ public class JarFuseTask extends Jar {
 
         // Check that at least 2 projects are defined
         if (validation.size() < 2) {
-            if (validation.size() == 1) ModFusionerPlugin.logger.error("Only one project was found. Skipping meldJars task.");
-            if (validation.size() == 0) ModFusionerPlugin.logger.error("No projects were found. Skipping meldJars task.");
+            if (validation.size() == 1) ModFusionerPlugin.logger.error("Only one project was found. Skipping fusejars task.");
+            if (validation.size() == 0) ModFusionerPlugin.logger.error("No projects were found. Skipping fusejars task.");
             return;
         }
         validation.clear();
