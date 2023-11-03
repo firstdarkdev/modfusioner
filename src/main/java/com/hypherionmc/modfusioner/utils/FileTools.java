@@ -2,6 +2,9 @@ package com.hypherionmc.modfusioner.utils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -10,11 +13,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.CopyOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
 
 import static org.apache.commons.io.FileUtils.*;
 
@@ -398,5 +401,26 @@ public class FileTools {
             dir.createNewFile();
 
         return dir;
+    }
+
+    public static File resolveFile(Project project, Object obj) {
+        if (obj == null) {
+            throw new NullPointerException("Null Path");
+        }
+
+        if (obj instanceof String) {
+            Task t = project.getTasks().getByName((String) obj);
+            if (t instanceof AbstractArchiveTask)
+                return ((AbstractArchiveTask)t).getArchiveFile().get().getAsFile();
+        }
+
+        if (obj instanceof File) {
+            return (File) obj;
+        }
+
+        if (obj instanceof AbstractArchiveTask) {
+            return ((AbstractArchiveTask)obj).getArchiveFile().get().getAsFile();
+        }
+        return project.file(obj);
     }
 }

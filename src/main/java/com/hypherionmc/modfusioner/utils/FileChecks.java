@@ -3,7 +3,6 @@ package com.hypherionmc.modfusioner.utils;
 import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

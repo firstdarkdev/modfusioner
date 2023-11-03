@@ -2,13 +2,16 @@ package com.hypherionmc.modfusioner.task;
 
 import com.hypherionmc.modfusioner.Constants;
 import com.hypherionmc.modfusioner.actions.JarMergeAction;
-import com.hypherionmc.modfusioner.plugin.ModFusionerExtension;
+import com.hypherionmc.modfusioner.plugin.FusionerExtension;
 import com.hypherionmc.modfusioner.plugin.ModFusionerPlugin;
 import com.hypherionmc.modfusioner.utils.FileChecks;
+import com.hypherionmc.modfusioner.utils.FileTools;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.internal.file.copy.CopyAction;
+import org.gradle.api.tasks.WorkResults;
+import org.gradle.jvm.tasks.Jar;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -17,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.modFusionerExtension;
 import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.rootProject;
@@ -25,32 +29,50 @@ import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.rootProject;
  * @author HypherionSA
  * The main task of the plugin
  */
-public class FuseJarsTask extends DefaultTask {
+public class JarFuseTask extends Jar {
 
-    @TaskAction
-    void meldJars() throws IOException {
+    // Fixed values
+    private final File mergedJar;
+    private static final AtomicBoolean hasRun = new AtomicBoolean(false);
+
+    public JarFuseTask() {
+        // Set task default values from extension
+        getArchiveBaseName().set(modFusionerExtension.getMergedJarName());
+        getArchiveVersion().set(modFusionerExtension.getJarVersion());
+        getDestinationDirectory().set(getProject().file(modFusionerExtension.getOutputDirectory()));
+
+        // We don't allow custom input files, when the user defines their own task
+        getInputs().files();
+
+        // Only allow the task to run once per cycle
+        getOutputs().upToDateWhen(spec -> hasRun.get());
+
+        // Set output file
+        mergedJar = new File(getDestinationDirectory().get().getAsFile(), getArchiveFileName().get());
+        getOutputs().file(mergedJar);
+    }
+
+    /**
+     * Main task logic
+     * @throws IOException - Thrown when an IO error occurs
+     */
+    void fuseJars() throws IOException {
         long time = System.currentTimeMillis();
-
-        // Check that all required values are set
-        if (modFusionerExtension.getOutJarName() == null || modFusionerExtension.getGroup() == null) {
-            ModFusionerPlugin.logger.error("Please configure \"group\" and \"outJarName\" manually!");
-            return;
-        }
 
         ModFusionerPlugin.logger.lifecycle("Start Fusing Jars");
 
         // Get settings from extension
-        ModFusionerExtension.ForgeConfiguration forgeConfiguration = modFusionerExtension.getForgeConfiguration();
-        ModFusionerExtension.FabricConfiguration fabricConfiguration = modFusionerExtension.getFabricConfiguration();
-        ModFusionerExtension.QuiltConfiguration quiltConfiguration = modFusionerExtension.getQuiltConfiguration();
+        FusionerExtension.ForgeConfiguration forgeConfiguration = modFusionerExtension.getForgeConfiguration();
+        FusionerExtension.FabricConfiguration fabricConfiguration = modFusionerExtension.getFabricConfiguration();
+        FusionerExtension.QuiltConfiguration quiltConfiguration = modFusionerExtension.getQuiltConfiguration();
 
-        List<ModFusionerExtension.CustomConfiguration> customConfigurations = modFusionerExtension.getCustomConfigurations();
+        List<FusionerExtension.CustomConfiguration> customConfigurations = modFusionerExtension.getCustomConfigurations();
 
         // Try to resolve the projects specific in the extension config
         Project forgeProject = null;
         Project fabricProject = null;
         Project quiltProject = null;
-        Map<Project, ModFusionerExtension.CustomConfiguration> customProjects = new HashMap<>();
+        Map<Project, FusionerExtension.CustomConfiguration> customProjects = new HashMap<>();
         List<Boolean> validation = new ArrayList<>();
 
         if (forgeConfiguration != null) {
@@ -75,7 +97,7 @@ public class FuseJarsTask extends DefaultTask {
         }
 
         if (customConfigurations != null) {
-            for (ModFusionerExtension.CustomConfiguration customSettings : customConfigurations) {
+            for (FusionerExtension.CustomConfiguration customSettings : customConfigurations) {
                 try {
                     customProjects.put(rootProject.getAllprojects().stream().filter(p -> !p.getName().equals(rootProject.getName())).filter(p -> p.getName().equals(customSettings.getProjectName())).findFirst().get(), customSettings);
                     validation.add(true);
@@ -95,28 +117,27 @@ public class FuseJarsTask extends DefaultTask {
         File forgeJar = null;
         File fabricJar = null;
         File quiltJar = null;
-        Map<ModFusionerExtension.CustomConfiguration, File> customJars = new HashMap<>();
+        Map<FusionerExtension.CustomConfiguration, File> customJars = new HashMap<>();
 
         if (forgeProject != null && forgeConfiguration != null) {
-            forgeJar = getInputFile(forgeConfiguration.getJarLocation(), forgeProject);
+            forgeJar = getInputFile(forgeConfiguration.getInputFile(), forgeConfiguration.getInputTaskName(), forgeProject);
         }
 
         if (fabricProject != null && fabricConfiguration != null) {
-            fabricJar = getInputFile(fabricConfiguration.getJarLocation(), fabricProject);
+            fabricJar = getInputFile(fabricConfiguration.getInputFile(), fabricConfiguration.getInputTaskName(), fabricProject);
         }
 
         if (quiltProject != null && quiltConfiguration != null) {
-            quiltJar = getInputFile(quiltConfiguration.getJarLocation(), quiltProject);
+            quiltJar = getInputFile(quiltConfiguration.getInputFile(), quiltConfiguration.getInputTaskName(), quiltProject);
         }
 
-        for (Map.Entry<Project, ModFusionerExtension.CustomConfiguration> entry : customProjects.entrySet()) {
-            File f = getInputFile(entry.getValue().getJarLocation(), entry.getKey());
+        for (Map.Entry<Project, FusionerExtension.CustomConfiguration> entry : customProjects.entrySet()) {
+            File f = getInputFile(entry.getValue().getInputFile(), entry.getValue().getInputTaskName(), entry.getKey());
             if (f != null)
                 customJars.put(entry.getValue(), f);
         }
 
         // Set up the final output jar
-        File mergedJar = new File(rootProject.getRootDir(), modFusionerExtension.getOutputDir() + File.separator + modFusionerExtension.getOutJarName());
         if (mergedJar.exists()) FileUtils.forceDelete(mergedJar);
         if (!mergedJar.getParentFile().exists()) mergedJar.getParentFile().mkdirs();
 
@@ -124,9 +145,9 @@ public class FuseJarsTask extends DefaultTask {
         JarMergeAction mergeAction = JarMergeAction.of(
                 customJars,
                 modFusionerExtension.getDuplicateRelocations(),
-                modFusionerExtension.getGroup(),
+                modFusionerExtension.getPackageGroup(),
                 new File(rootProject.getRootDir(), ".gradle" + File.separator + "fusioner"),
-                modFusionerExtension.getOutJarName()
+                getArchiveFileName().get()
         );
 
         // Forge
@@ -155,6 +176,27 @@ public class FuseJarsTask extends DefaultTask {
         mergeAction.clean();
 
         ModFusionerPlugin.logger.lifecycle("Fused jar created in " + (System.currentTimeMillis() - time) / 1000.0 + " seconds.");
+        hasRun.set(true);
+    }
+
+    /**
+     * Run the main task logic and copy the files to the correct locations
+     * @return - Just returns true to say the task executed
+     */
+    @Override
+    protected @NotNull CopyAction createCopyAction() {
+        return copyActionProcessingStream -> {
+            copyActionProcessingStream.process(fileCopyDetailsInternal -> {
+                if (!hasRun.get())
+                    try {
+                        fuseJars();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+            });
+
+            return WorkResults.didWork(true);
+        };
     }
 
     /**
@@ -164,9 +206,11 @@ public class FuseJarsTask extends DefaultTask {
      * @return - The jar file or null
      */
     @Nullable
-    private File getInputFile(@Nullable String jarLocation, Project inProject) {
+    private File getInputFile(@Nullable String jarLocation, String inputTaskName, Project inProject) {
         if (jarLocation != null && !jarLocation.isEmpty()) {
             return new File(inProject.getProjectDir(), jarLocation);
+        } else if (inputTaskName != null && !inputTaskName.isEmpty()) {
+          return FileTools.resolveFile(inProject, inputTaskName);
         } else {
             int i = 0;
             for (File file : new File(inProject.getBuildDir(), "libs").listFiles()) {
