@@ -70,7 +70,7 @@ fusioner {
     }
 
     // Quilt Project
-    fabric {
+    quilt {
         projectName = "Quilt" // The name of the project that contains the quilt code
         inputTaskName = "remapJar" // The name of the build task for the forge project
         // OR
