@@ -70,7 +70,7 @@ public class FusionerExtension {
             mergedJarName = "MergedJar";
         }
 
-        if (jarVersion.isEmpty()) {
+        if (jarVersion != null && jarVersion.isEmpty()) {
             if (ModFusionerPlugin.rootProject.hasProperty("version") && ModFusionerPlugin.rootProject.property("version") != null) {
                 jarVersion = ModFusionerPlugin.rootProject.property("version").toString();
             } else {
