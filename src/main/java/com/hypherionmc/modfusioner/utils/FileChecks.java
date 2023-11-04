@@ -9,9 +9,7 @@
  */
 package com.hypherionmc.modfusioner.utils;
 
-import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,10 +25,22 @@ public class FileChecks {
      * @param file - The file to test
      * @return - True if binary
      */
-    public static boolean isBinary(@NotNull File file) throws IOException {
-        Tika tika = new Tika();
-        String detectedType = tika.detect(file);
-        return detectedType.equals("application/octet-stream");
+    public static boolean isBinary(@NotNull File file) {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            int size = (int) Math.min(file.length(), 4096);
+            byte[] data = new byte[size];
+            int bytesRead = inputStream.read(data, 0, size);
+
+            for (int i = 0; i < bytesRead; i++) {
+                if (data[i] == 0) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**

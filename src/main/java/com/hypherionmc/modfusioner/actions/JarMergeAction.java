@@ -418,7 +418,7 @@ public class JarMergeAction {
                 for (Map.Entry<String, String> entry : relocations.entrySet()) {
                     line = line.replace(entry.getKey(), entry.getValue());
                 }
-                sb.append(line).append("\n");
+                sb.append(line);
             }
 
             scanner.close();
