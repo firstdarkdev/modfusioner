@@ -598,27 +598,18 @@ public class JarMergeAction {
      * @throws IOException - Thrown if an IO error occurs
      */
     public void removeDuplicateResources(File mergedTemps) throws IOException {
-
         if (ignoredPackages != null) {
             for (File file : getTextFiles(mergedTemps)) {
-                FileInputStream fis = new FileInputStream(file);
-                Scanner scanner = new Scanner(fis);
+                List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
                 StringBuilder sb = new StringBuilder();
 
-                while (scanner.hasNext()) {
-                    String line = scanner.nextLine();
-                    for (Map.Entry<String, String> entry : removeDuplicateRelocationResources.entrySet()) {
+                for (String line : lines) {
+                    for (HashMap.Entry<String, String> entry : removeDuplicateRelocationResources.entrySet()) {
                         line = line.replace(entry.getKey(), entry.getValue());
                     }
                     sb.append(line).append("\n");
                 }
-
-                scanner.close();
-                fis.close();
-                FileOutputStream fos = new FileOutputStream(file);
-                fos.write(sb.toString().getBytes());
-                fos.flush();
-                fos.close();
+                FileUtils.write(file, sb.toString().trim(), StandardCharsets.UTF_8);
             }
         }
     }
