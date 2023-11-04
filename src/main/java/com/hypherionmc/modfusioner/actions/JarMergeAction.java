@@ -419,6 +419,9 @@ public class JarMergeAction {
                     line = line.replace(entry.getKey(), entry.getValue());
                 }
                 sb.append(line);
+
+                if (scanner.hasNext())
+                    sb.append("\n");
             }
 
             scanner.close();
