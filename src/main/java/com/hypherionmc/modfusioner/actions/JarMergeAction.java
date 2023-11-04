@@ -32,6 +32,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.logger;
+import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.modFusionerExtension;
 import static com.hypherionmc.modfusioner.utils.FileTools.*;
 
 /**
@@ -91,15 +92,15 @@ public class JarMergeAction {
             throw new IllegalArgumentException("No input jars were provided.");
         }
 
-        if (!FileTools.exists(forgeInput)) {
+        if (modFusionerExtension.getForgeConfiguration() != null && !FileTools.exists(forgeInput)) {
             logger.warn("Forge jar does not exist! You can ignore this warning if you are not using forge");
         }
 
-        if (!FileTools.exists(fabricInput)) {
+        if (modFusionerExtension.getFabricConfiguration() != null && !FileTools.exists(fabricInput)) {
             logger.warn("Fabric jar does not exist! You can ignore this warning if you are not using fabric");
         }
 
-        if (!FileTools.exists(quiltInput)) {
+        if (modFusionerExtension.getQuiltConfiguration() != null && !FileTools.exists(quiltInput)) {
             logger.warn("Quilt jar does not exist! You can ignore this warning if you are not using quilt");
         }
 
