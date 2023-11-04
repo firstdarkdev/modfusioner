@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -409,27 +410,16 @@ public class JarMergeAction {
         relocations.put(group.replace(".", "/"), identifier + "/" + group.replace(".", "/"));
 
         for (File file : getTextFiles(workingDir)) {
-            FileInputStream fis = new FileInputStream(file);
-            Scanner scanner = new Scanner(fis);
+            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
             StringBuilder sb = new StringBuilder();
 
-            while (scanner.hasNext()) {
-                String line = scanner.nextLine();
-                for (Map.Entry<String, String> entry : relocations.entrySet()) {
+            for (String line : lines) {
+                for (HashMap.Entry<String, String> entry : relocations.entrySet()) {
                     line = line.replace(entry.getKey(), entry.getValue());
                 }
-                sb.append(line);
-
-                if (scanner.hasNext())
-                    sb.append("\n");
+                sb.append(line).append("\n");
             }
-
-            scanner.close();
-            fis.close();
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(sb.toString().getBytes());
-            fos.flush();
-            fos.close();
+            FileUtils.write(file, sb.toString().trim(), StandardCharsets.UTF_8);
         }
     }
 
