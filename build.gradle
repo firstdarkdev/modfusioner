@@ -12,7 +12,8 @@ group = 'com.hypherionmc.modutils'
 version = "${version_base}.${version_patch}"
 description = "Gradle plugin to merge multiloader/architectury multiplatform mods into a single jar file"
 archivesBaseName = 'ModFusioner'
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 if (System.getenv('BUILD_NUMBER') != null) {
     version = "${version_base}." + System.getenv('BUILD_NUMBER')
@@ -32,17 +33,17 @@ repositories {
 
 dependencies {
     implementation gradleApi()
+    testImplementation 'org.jetbrains:annotations:24.0.0'
 
     // Shaded Deps
     shadeMe 'org.jetbrains:annotations:24.0.1'
     shadeMe 'commons-io:commons-io:2.11.0'
 
-    shadeMe('me.lucko:jar-relocator:1.5') {
+    shadeMe('com.hypherionmc:jarmanager:1.0.3') {
         exclude group: 'org.ow2.asm'
     }
     shadeMe 'org.ow2.asm:asm:9.3'
     shadeMe 'org.ow2.asm:asm-commons:9.3'
-    shadeMe "fr.stevecohen.jarmanager:JarManager:0.5.0"
     shadeMe 'org.apache.commons:commons-compress:1.24.0'
 
     compileOnly 'org.projectlombok:lombok:1.18.30'

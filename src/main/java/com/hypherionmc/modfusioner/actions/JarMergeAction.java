@@ -9,15 +9,13 @@
  */
 package com.hypherionmc.modfusioner.actions;
 
+import com.hypherionmc.jarmanager.JarManager;
+import com.hypherionmc.jarrelocator.Relocation;
 import com.hypherionmc.modfusioner.Constants;
 import com.hypherionmc.modfusioner.plugin.FusionerExtension;
 import com.hypherionmc.modfusioner.utils.FileTools;
-import fr.stevecohen.jarmanager.JarPacker;
-import fr.stevecohen.jarmanager.JarUnpacker;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import me.lucko.jarrelocator.JarRelocator;
-import me.lucko.jarrelocator.Relocation;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -26,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +66,8 @@ public class JarMergeAction {
     private final Map<String, String> ignoredDuplicateRelocations = new HashMap<>();
     private final Map<String, String> removeDuplicateRelocationResources = new HashMap<>();
     private final List<Relocation> relocations = new ArrayList<>();
+    JarManager jarManager = JarManager.getInstance();
+
 
     // Settings
     private final String group;
@@ -133,20 +132,24 @@ public class JarMergeAction {
 
         // Extract the input jars to their processing directories
         logger.lifecycle("Unpacking input jars");
-        JarUnpacker jarUnpacker = new JarUnpacker();
+
         if (FileTools.exists(forgeInput)) {
-            jarUnpacker.unpack(forgeInput.getAbsolutePath(), forgeTemp.getAbsolutePath());
+            jarManager.unpackJar(forgeInput, forgeTemp);
         }
         if (FileTools.exists(fabricInput)) {
-            jarUnpacker.unpack(fabricInput.getAbsolutePath(), fabricTemp.getAbsolutePath());
+            jarManager.unpackJar(fabricInput, fabricTemp);
         }
         if (FileTools.exists(quiltInput)) {
-            jarUnpacker.unpack(quiltInput.getAbsolutePath(), quiltTemp.getAbsolutePath());
+            jarManager.unpackJar(quiltInput, quiltTemp);
         }
 
         customTemps.forEach((key, value) -> value.forEach((k, v) -> {
             if (FileTools.exists(k)) {
-                jarUnpacker.unpack(k.getAbsolutePath(), v.getAbsolutePath());
+                try {
+                    jarManager.unpackJar(k, v);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }));
 
@@ -174,12 +177,7 @@ public class JarMergeAction {
 
         // Repack the fully processed jars into a single jar
         logger.lifecycle("Fusing jars into single jar");
-        JarPacker jarPacker = new JarPacker();
-        jarPacker.pack(mergedTemp.getAbsolutePath(), outJar.getAbsolutePath());
-
-        // Relocate duplicate packages that have been de-duplicated
-        logger.lifecycle("Finishing up");
-        relocateJar(outJar, new File(tempDir, "relocate.jar"));
+        jarManager.remapAndPack(mergedTemp, outJar, relocations);
 
         try {
             Files.setPosixFilePermissions(outJar.toPath(), Constants.filePerms);
@@ -193,6 +191,7 @@ public class JarMergeAction {
      * @throws IOException - Thrown if an IO error occurs
      */
     public void clean() throws IOException {
+        logger.lifecycle("Finishing up");
         FileUtils.deleteQuietly(tempDir);
     }
 
@@ -201,20 +200,6 @@ public class JarMergeAction {
      * =                                            Jar Remapping                                                     =
      * ================================================================================================================
      */
-
-    /**
-     * Relocate, or rename packages that have been deduplicated and moved around
-     * @param mergedJar - Input jar
-     * @param mergedOutputJar - Temporary output jar
-     * @throws IOException - Thrown if an IO exception occurs
-     */
-    private void relocateJar(File mergedJar, File mergedOutputJar) throws IOException {
-        JarRelocator jarRelocator = new JarRelocator(mergedJar, mergedOutputJar, relocations);
-        jarRelocator.run();
-
-        Files.move(mergedOutputJar.toPath(), mergedJar.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        if (mergedOutputJar.exists()) mergedOutputJar.delete();
-    }
 
     /**
      * Process input jars to relocate them internally to their final package names
@@ -272,8 +257,7 @@ public class JarMergeAction {
                 jarRelocations.add(new Relocation(architectury.get(), target + "." + architectury.get()));
             }
 
-            JarRelocator jarRelocator = new JarRelocator(jarFile, remappedJar, jarRelocations);
-            jarRelocator.run();
+            jarManager.remapJar(jarFile, remappedJar, jarRelocations);
 
             switch (target) {
                 case "forge":
@@ -326,9 +310,7 @@ public class JarMergeAction {
             customRelocations.add(new Relocation(architectury.get(), name + "." + architectury.get()));
         }
 
-        JarRelocator customRelocator = new JarRelocator(jarFile, remappedJar, customRelocations);
-        customRelocator.run();
-
+        jarManager.remapJar(jarFile, remappedJar, customRelocations);
         customInputs.replace(configuration, jarFile, remappedJar);
     }
 
@@ -354,8 +336,6 @@ public class JarMergeAction {
                 }
             }
         }
-
-        logger.lifecycle("Remapping Finished");
     }
 
     /**
