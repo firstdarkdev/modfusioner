@@ -10,6 +10,7 @@
 package com.hypherionmc.modfusioner.utils;
 
 import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
