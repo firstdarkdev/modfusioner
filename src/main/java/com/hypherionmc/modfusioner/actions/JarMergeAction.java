@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.zip.Deflater;
 
 import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.logger;
 import static com.hypherionmc.modfusioner.plugin.ModFusionerPlugin.modFusionerExtension;
@@ -81,6 +82,7 @@ public class JarMergeAction {
      * @throws IOException - Thrown when an IO Exception occurs
      */
     public File mergeJars(boolean skipIfExists) throws IOException {
+        jarManager.setCompressionLevel(Deflater.BEST_COMPRESSION);
         File outJar = new File(tempDir, outJarName);
         if (outJar.exists()) {
             if (skipIfExists) return outJar;

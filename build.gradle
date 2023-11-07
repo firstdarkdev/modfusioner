@@ -39,7 +39,7 @@ dependencies {
     shadeMe 'org.jetbrains:annotations:24.0.1'
     shadeMe 'commons-io:commons-io:2.11.0'
 
-    shadeMe('com.hypherionmc:jarmanager:1.0.3') {
+    shadeMe('com.hypherionmc:jarmanager:1.0.4') {
         exclude group: 'org.ow2.asm'
     }
     shadeMe 'org.ow2.asm:asm:9.3'
