@@ -594,7 +594,7 @@ public class JarMergeAction {
                     }
                     sb.append(line).append("\n");
                 }
-                FileUtils.write(file, sb.toString().trim(), StandardCharsets.UTF_8);
+                FileUtils.write(file, sb.toString().trim() + "\n", StandardCharsets.UTF_8);
             }
         }
     }
