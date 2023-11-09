@@ -39,11 +39,11 @@ dependencies {
     shadeMe 'org.jetbrains:annotations:24.0.1'
     shadeMe 'commons-io:commons-io:2.11.0'
 
-    shadeMe('com.hypherionmc:jarmanager:1.0.4') {
+    shadeMe('com.hypherionmc:jarmanager:1.0.5') {
         exclude group: 'org.ow2.asm'
     }
-    shadeMe 'org.ow2.asm:asm:9.3'
-    shadeMe 'org.ow2.asm:asm-commons:9.3'
+    shadeMe 'org.ow2.asm:asm:9.5'
+    shadeMe 'org.ow2.asm:asm-commons:9.5'
     shadeMe 'org.apache.commons:commons-compress:1.24.0'
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
