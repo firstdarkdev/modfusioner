@@ -72,6 +72,7 @@ public class JarFuseTask extends Jar {
 
         // Get settings from extension
         FusionerExtension.ForgeConfiguration forgeConfiguration = modFusionerExtension.getForgeConfiguration();
+        FusionerExtension.NeoForgeConfiguration neoforgeConfiguration = modFusionerExtension.getNeoforgeConfiguration();
         FusionerExtension.FabricConfiguration fabricConfiguration = modFusionerExtension.getFabricConfiguration();
         FusionerExtension.QuiltConfiguration quiltConfiguration = modFusionerExtension.getQuiltConfiguration();
 
@@ -79,6 +80,7 @@ public class JarFuseTask extends Jar {
 
         // Try to resolve the projects specific in the extension config
         Project forgeProject = null;
+        Project neoforgeProject = null;
         Project fabricProject = null;
         Project quiltProject = null;
         Map<Project, FusionerExtension.CustomConfiguration> customProjects = new HashMap<>();
@@ -87,6 +89,13 @@ public class JarFuseTask extends Jar {
         if (forgeConfiguration != null) {
             try {
                 forgeProject = rootProject.getAllprojects().stream().filter(p -> !p.getName().equals(rootProject.getName())).filter(p -> p.getName().equalsIgnoreCase(forgeConfiguration.getProjectName())).findFirst().get();
+                validation.add(true);
+            } catch (NoSuchElementException ignored) { }
+        }
+
+        if (neoforgeConfiguration != null) {
+            try {
+                neoforgeProject = rootProject.getAllprojects().stream().filter(p -> !p.getName().equals(rootProject.getName())).filter(p -> p.getName().equalsIgnoreCase(neoforgeConfiguration.getProjectName())).findFirst().get();
                 validation.add(true);
             } catch (NoSuchElementException ignored) { }
         }
@@ -124,12 +133,17 @@ public class JarFuseTask extends Jar {
 
         // Try to automatically determine the input jar from the projects
         File forgeJar = null;
+        File neoforgeJar = null;
         File fabricJar = null;
         File quiltJar = null;
         Map<FusionerExtension.CustomConfiguration, File> customJars = new HashMap<>();
 
         if (forgeProject != null && forgeConfiguration != null) {
             forgeJar = getInputFile(forgeConfiguration.getInputFile(), forgeConfiguration.getInputTaskName(), forgeProject);
+        }
+
+        if (neoforgeProject != null && neoforgeConfiguration != null) {
+            neoforgeJar = getInputFile(neoforgeConfiguration.getInputFile(), neoforgeConfiguration.getInputTaskName(), neoforgeProject);
         }
 
         if (fabricProject != null && fabricConfiguration != null) {
@@ -163,6 +177,10 @@ public class JarFuseTask extends Jar {
         mergeAction.setForgeInput(forgeJar);
         mergeAction.setForgeRelocations(forgeConfiguration == null ? new HashMap<>() : forgeConfiguration.getRelocations());
         mergeAction.setForgeMixins(forgeConfiguration == null ? new ArrayList<>() : forgeConfiguration.getMixins());
+
+        // NeoForge
+        mergeAction.setNeoforgeInput(neoforgeJar);
+        mergeAction.setNeoforgeRelocations(neoforgeConfiguration == null ? new HashMap<>() : neoforgeConfiguration.getRelocations());
 
         // Fabric
         mergeAction.setFabricInput(fabricJar);

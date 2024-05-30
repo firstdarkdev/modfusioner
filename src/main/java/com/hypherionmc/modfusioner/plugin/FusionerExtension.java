@@ -12,9 +12,11 @@ package com.hypherionmc.modfusioner.plugin;
 import groovy.lang.Closure;
 import lombok.Getter;
 import lombok.Setter;
+import org.gradle.api.Action;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class FusionerExtension {
 
     // Group, or package names that will be used for the final jar
@@ -41,6 +43,10 @@ public class FusionerExtension {
     // Forge Project Configuration
     @Getter @Setter
     FusionerExtension.ForgeConfiguration forgeConfiguration;
+
+    // Forge Project Configuration
+    @Getter @Setter
+    FusionerExtension.NeoForgeConfiguration neoforgeConfiguration;
 
     // Fabric Project Configuration
     @Getter @Setter
@@ -107,6 +113,15 @@ public class FusionerExtension {
         forgeConfiguration = new FusionerExtension.ForgeConfiguration();
         ModFusionerPlugin.rootProject.configure(forgeConfiguration, closure);
         return forgeConfiguration;
+    }
+
+    /**
+     * Set up the neoforge project configurations
+     */
+    public FusionerExtension.NeoForgeConfiguration neoforge(Closure<NeoForgeConfiguration> closure) {
+        neoforgeConfiguration = new FusionerExtension.NeoForgeConfiguration();
+        ModFusionerPlugin.rootProject.configure(neoforgeConfiguration, closure);
+        return neoforgeConfiguration;
     }
 
     /**
@@ -181,6 +196,37 @@ public class FusionerExtension {
          */
         public void mixin(String mixin) {
             this.mixins.add(mixin);
+        }
+    }
+
+    /**
+     * NeoForge Configuration Structure
+     */
+    public static class NeoForgeConfiguration {
+
+        // The name of the gradle module that contains the fabric code
+        @Getter @Setter
+        String projectName = "neoforge";
+
+        // The file that will be used as the input
+        @Getter @Setter
+        String inputFile;
+
+        // The name of the task to run to get the input file
+        @Getter @Setter
+        String inputTaskName;
+
+        // Packages that should be relocated, instead of duplicated
+        @Getter
+        Map<String, String> relocations = new HashMap<>();
+
+        /**
+         * Add a package to relocate, instead of duplicating
+         * @param from - The original name of the package. For example: com.google.gson
+         * @param to - The new name of the package. For example: forge.com.google.gson
+         */
+        public void addRelocate(String from, String to) {
+            this.relocations.put(from, to);
         }
     }
 
