@@ -9,7 +9,6 @@
  */
 package com.hypherionmc.modfusioner.plugin;
 
-import groovy.lang.Closure;
 import lombok.Getter;
 import lombok.Setter;
 import org.gradle.api.Action;
@@ -109,45 +108,45 @@ public class FusionerExtension {
     /**
      * Set up the forge project configurations
      */
-    public FusionerExtension.ForgeConfiguration forge(Closure<FusionerExtension.ForgeConfiguration> closure) {
+    public FusionerExtension.ForgeConfiguration forge(Action<FusionerExtension.ForgeConfiguration> action) {
         forgeConfiguration = new FusionerExtension.ForgeConfiguration();
-        ModFusionerPlugin.rootProject.configure(forgeConfiguration, closure);
+        action.execute(forgeConfiguration);
         return forgeConfiguration;
     }
 
     /**
      * Set up the neoforge project configurations
      */
-    public FusionerExtension.NeoForgeConfiguration neoforge(Closure<NeoForgeConfiguration> closure) {
+    public FusionerExtension.NeoForgeConfiguration neoforge(Action<NeoForgeConfiguration> action) {
         neoforgeConfiguration = new FusionerExtension.NeoForgeConfiguration();
-        ModFusionerPlugin.rootProject.configure(neoforgeConfiguration, closure);
+        action.execute(neoforgeConfiguration);
         return neoforgeConfiguration;
     }
 
     /**
      * Set up the fabric project configurations
      */
-    public FusionerExtension.FabricConfiguration fabric(Closure<FusionerExtension.FabricConfiguration> closure) {
+    public FusionerExtension.FabricConfiguration fabric(Action<FusionerExtension.FabricConfiguration> action) {
         fabricConfiguration = new FusionerExtension.FabricConfiguration();
-        ModFusionerPlugin.rootProject.configure(fabricConfiguration, closure);
+        action.execute(fabricConfiguration);
         return fabricConfiguration;
     }
 
     /**
      * Set up the quilt project configurations
      */
-    public FusionerExtension.QuiltConfiguration quilt(Closure<FusionerExtension.QuiltConfiguration> closure) {
+    public FusionerExtension.QuiltConfiguration quilt(Action<FusionerExtension.QuiltConfiguration> action) {
         quiltConfiguration = new FusionerExtension.QuiltConfiguration();
-        ModFusionerPlugin.rootProject.configure(quiltConfiguration, closure);
+        action.execute(quiltConfiguration);
         return quiltConfiguration;
     }
 
     /**
      * Set up custom project configurations
      */
-    public FusionerExtension.CustomConfiguration custom(Closure<FusionerExtension.CustomConfiguration> closure) {
+    public FusionerExtension.CustomConfiguration custom(Action<FusionerExtension.CustomConfiguration> action) {
         FusionerExtension.CustomConfiguration customConfiguration = new FusionerExtension.CustomConfiguration();
-        ModFusionerPlugin.rootProject.configure(customConfiguration, closure);
+        action.execute(customConfiguration);
 
         if (customConfiguration.getProjectName() == null || customConfiguration.getProjectName().isEmpty()) {
             throw new IllegalStateException("Custom project configurations need to specify a \"projectName\"");
