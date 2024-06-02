@@ -58,10 +58,21 @@ fusioner {
         addRelocate "me.hypherionmc.mcdiscordformatter", "forge.me.hypherionmc.mcdiscordformatter"
     }
 
+    // NeoForge Project
+    neoforge {
+        projectName = "NeoForge" // The name of the project that contains the neoforge code
+        inputTaskName = "remapJar" // The name of the build task for the neoforge project
+        // OR
+        // inputFile = "NeoForge/build/libs/MyMod-NeoForge-1.0.jar" // Use a custom jar input
+
+        // Packages that need to be relocated to the specific platform
+        addRelocate "me.hypherionmc.mcdiscordformatter", "neoforge.me.hypherionmc.mcdiscordformatter"
+    }
+
     // Fabric Project
     fabric {
         projectName = "Fabric" // The name of the project that contains the fabric code
-        inputTaskName = "remapJar" // The name of the build task for the forge project
+        inputTaskName = "remapJar" // The name of the build task for the fabric project
         // OR
         // inputFile = "Fabric/build/libs/MyMod-Fabric-1.0.jar" // Use a custom jar input
 
@@ -72,7 +83,7 @@ fusioner {
     // Quilt Project
     quilt {
         projectName = "Quilt" // The name of the project that contains the quilt code
-        inputTaskName = "remapJar" // The name of the build task for the forge project
+        inputTaskName = "remapJar" // The name of the build task for the quilt project
         // OR
         // inputFile = "Quilt/build/libs/MyMod-Quilt-1.0.jar" // Use a custom jar input
 
@@ -83,7 +94,7 @@ fusioner {
     // For "custom", the "projectName" is a required value.
     custom {
         projectName = "sponge" // This is the name of the project. This is a required field.
-        inputTaskName = "jar" // The name of the build task for the forge project
+        inputTaskName = "jar" // The name of the build task for the project
         // OR
         // inputFile = "sponge/build/libs/MyMod-Sponge-1.0.jar" // Use a custom jar input
 
