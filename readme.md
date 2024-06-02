@@ -60,7 +60,7 @@ fusioner {
 
     // NeoForge Project
     neoforge {
-        projectName = "NeoForge" // The name of the project that contains the fabric code
+        projectName = "NeoForge" // The name of the project that contains the neoforge code
         inputTaskName = "remapJar" // The name of the build task for the neoforge project
         // OR
         // inputFile = "NeoForge/build/libs/MyMod-NeoForge-1.0.jar" // Use a custom jar input
