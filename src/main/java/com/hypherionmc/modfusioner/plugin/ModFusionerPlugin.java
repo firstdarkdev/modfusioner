@@ -61,6 +61,18 @@ public class ModFusionerPlugin implements Plugin<Project> {
                     );
             }
 
+            if (modFusionerExtension.getNeoforgeConfiguration() != null
+                    && modFusionerExtension.getNeoforgeConfiguration().inputTaskName != null
+                    && !modFusionerExtension.getNeoforgeConfiguration().inputTaskName.isEmpty()) {
+                if (ccc.getName().equals(modFusionerExtension.getNeoforgeConfiguration().getProjectName()))
+                    resolveInputTasks(
+                            ccc,
+                            modFusionerExtension.getNeoforgeConfiguration().getInputTaskName(),
+                            modFusionerExtension.getNeoforgeConfiguration().getProjectName(),
+                            task
+                    );
+            }
+
             if (modFusionerExtension.getFabricConfiguration() != null
                     && modFusionerExtension.getFabricConfiguration().inputTaskName != null
                     && !modFusionerExtension.getFabricConfiguration().inputTaskName.isEmpty()) {
